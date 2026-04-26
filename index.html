@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Series Planning Tracker — Creative Arts</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F8F7F4;--surface:#FFFFFF;--sidebar:#16150F;
+  --text:#1A1A16;--muted:#7A7870;--border:#E8E6E0;
+  --purple:#7F77DD;--purple-l:#EEEDFE;--purple-d:#3C3489;
+  --teal:#1D9E75;--teal-l:#E1F5EE;--teal-d:#085041;
+  --coral:#D85A30;--coral-l:#FAECE7;--coral-d:#712B13;
+  --amber:#BA7517;--amber-l:#FAEEDA;--amber-d:#633806;
+  --blue:#378ADD;--blue-l:#E6F1FB;--blue-d:#0C447C;
+  --gray-l:#F1EFE8;--font:'Georgia',serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+/* ── SETUP SCREEN ── */
+#setup-screen{position:fixed;inset:0;background:var(--sidebar);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:0}
+.setup-card{background:#fff;border-radius:16px;padding:36px 40px;width:420px;max-width:94vw}
+.setup-logo{font-family:var(--font);font-size:22px;color:var(--text);margin-bottom:4px}
+.setup-sub{font-size:12px;color:var(--muted);margin-bottom:28px;text-transform:uppercase;letter-spacing:.06em}
+.setup-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:block}
+.setup-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);outline:none;color:var(--text);margin-bottom:6px}
+.setup-input:focus{border-color:var(--purple)}
+.setup-hint{font-size:11px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.setup-hint a{color:var(--purple);text-decoration:none}
+.setup-btn{width:100%;padding:11px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:14px;font-family:var(--sans);cursor:pointer;font-weight:500}
+.setup-btn:hover{background:var(--purple-d)}
+.setup-skip{text-align:center;margin-top:12px;font-size:12px;color:var(--muted);cursor:pointer}
+.setup-skip:hover{color:var(--text)}
+/* ── PIN SCREEN ── */
+#pin-screen{position:fixed;inset:0;background:var(--sidebar);display:none;align-items:center;justify-content:center;z-index:999}
+.pin-card{background:#fff;border-radius:16px;padding:36px 40px;width:340px;max-width:94vw;text-align:center}
+.pin-title{font-family:var(--font);font-size:20px;margin-bottom:6px}
+.pin-sub{font-size:12px;color:var(--muted);margin-bottom:24px}
+.pin-input{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:22px;font-family:var(--sans);text-align:center;letter-spacing:.3em;outline:none;margin-bottom:14px}
+.pin-input:focus{border-color:var(--purple)}
+.pin-error{font-size:12px;color:var(--coral-d);margin-bottom:10px;min-height:16px}
+/* ── APP SHELL ── */
+#app{display:flex;flex:1;overflow:hidden}
+#sidebar{width:220px;min-width:220px;background:var(--sidebar);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.brand{padding:20px 18px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand h1{font-family:var(--font);font-size:15px;color:#fff;font-weight:normal;line-height:1.3}
+.brand p{font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;letter-spacing:.04em;text-transform:uppercase}
+#series-chip{font-size:11px;color:rgba(255,255,255,.45);padding:9px 18px 8px;border-bottom:1px solid rgba(255,255,255,.06);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.5);border-left:2px solid transparent;transition:all .15s;user-select:none}
+.nav-item:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.05)}
+.nav-item.active{color:#fff;background:rgba(255,255,255,.08);border-left-color:var(--purple)}
+.nav-section{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:14px 18px 6px}
+.sidebar-bottom{padding:14px 18px;margin-top:auto;border-top:1px solid rgba(255,255,255,.06)}
+.s-stat{display:flex;justify-content:space-between;margin-bottom:5px;font-size:11px;color:rgba(255,255,255,.35)}
+.s-stat span:last-child{color:#fff;font-weight:500}
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0}
+#topbar h2{font-family:var(--font);font-size:18px;font-weight:normal;flex:1}
+.btn{padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;color:var(--muted);font-family:var(--sans);transition:all .12s}
+.btn:hover{background:var(--gray-l);color:var(--text)}
+.btn-primary{background:var(--purple);color:#fff;border-color:var(--purple)}
+.btn-primary:hover{background:var(--purple-d);color:#fff}
+.btn-danger{color:var(--coral-d);border-color:var(--coral-l)}
+.btn-danger:hover{background:var(--coral-l);color:var(--coral-d)}
+#content{flex:1;overflow-y:auto;padding:24px}
+/* ── CARDS / LAYOUT ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:12px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.stat-card .num{font-family:var(--font);font-size:28px;font-weight:normal;margin-bottom:2px}
+.stat-card .lbl{font-size:11px;color:var(--muted)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* ── PHASE BARS ── */
+.phase-bar-wrap{margin-bottom:8px}
+.phase-bar-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.phase-bar-name{font-size:12px;font-weight:500}
+.phase-bar-pct{font-size:11px;color:var(--muted)}
+.phase-bar{height:6px;background:var(--gray-l);border-radius:3px;overflow:hidden}
+.phase-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+/* ── TASKS ── */
+.phase-section{margin-bottom:28px}
+.phase-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.phase-badge{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;letter-spacing:.03em}
+.phase-title{font-family:var(--font);font-size:16px;font-weight:normal}
+.phase-window{font-size:11px;color:var(--muted);margin-left:auto;font-style:italic}
+.task-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:flex-start;gap:12px;transition:box-shadow .12s}
+.task-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.task-card.gate{background:var(--gray-l);border-style:dashed}
+.task-main{flex:1;min-width:0}
+.task-text{font-size:13px;color:var(--text);line-height:1.4;margin-bottom:6px}
+.task-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.role-tag{font-size:10px;color:var(--muted);background:var(--gray-l);padding:2px 7px;border-radius:4px}
+.due-tag{font-size:11px;color:var(--muted)}
+.status-btn{font-size:10px;font-weight:500;padding:3px 9px;border-radius:20px;cursor:pointer;border:none;font-family:var(--sans);transition:all .12s;white-space:nowrap}
+.assign-btn{font-size:11px;padding:3px 8px;border-radius:4px;border:1px dashed var(--border);background:transparent;cursor:pointer;color:var(--muted);font-family:var(--sans)}
+.assign-btn:hover{background:var(--gray-l)}
+.assignee-pill{font-size:11px;padding:2px 8px;border-radius:20px;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;font-family:var(--sans)}
+.avatar{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0}
+.avatar-lg{width:38px;height:38px;font-size:14px}
+.notes-in{font-size:11px;padding:3px 7px;border:1px solid transparent;border-radius:4px;background:transparent;font-family:var(--sans);color:var(--muted);width:160px;outline:none}
+.notes-in:hover{border-color:var(--border)}
+.notes-in:focus{border-color:var(--purple);background:var(--surface);color:var(--text)}
+.gate-lbl{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+/* ── FILTERS ── */
+.filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;color:var(--muted);font-family:var(--sans);transition:all .12s}
+.filter-btn.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+/* ── TEAM ── */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.team-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.team-name{font-size:14px;font-weight:500}
+.team-role{font-size:11px;color:var(--muted)}
+.team-tasks-count{font-size:11px;color:var(--muted);margin-top:auto}
+.add-card{background:var(--gray-l);border:1px dashed var(--border);border-radius:10px;padding:16px 18px;cursor:pointer;text-align:center;color:var(--muted);font-size:13px;transition:all .12s;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:120px;gap:6px}
+.add-card:hover{background:var(--surface);color:var(--text)}
+/* ── AI CHAT ── */
+#ai-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden}
+.quick-row{display:flex;gap:6px;flex-wrap:wrap;padding:12px 24px 8px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.qp{font-size:11px;padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--muted);font-family:var(--sans);white-space:nowrap;transition:all .12s}
+.qp:hover{background:var(--gray-l);color:var(--text)}
+#chat-msgs{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:84%;padding:11px 15px;border-radius:10px;font-size:13px;line-height:1.65}
+.msg-user{align-self:flex-end;background:var(--purple);color:#fff;border-radius:10px 10px 2px 10px}
+.msg-ai{align-self:flex-start;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px 10px 10px 2px}
+.msg-ai strong{color:var(--purple-d)}
+#chat-in-row{padding:14px 24px;border-top:1px solid var(--border);background:var(--surface);display:flex;gap:10px;flex-shrink:0}
+#chat-in{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);outline:none;background:var(--bg);color:var(--text)}
+#chat-in:focus{border-color:var(--purple)}
+.typing{display:flex;gap:4px;align-items:center}
+.typing span{width:5px;height:5px;background:var(--muted);border-radius:50%;animation:bounce .8s infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+/* ── SETTINGS ── */
+.settings-section{margin-bottom:24px}
+.settings-title{font-family:var(--font);font-size:15px;font-weight:normal;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.key-display{font-family:monospace;font-size:12px;background:var(--gray-l);padding:8px 12px;border-radius:6px;color:var(--muted);margin-bottom:8px;word-break:break-all}
+/* ── LOBBY ── */
+.lobby-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.lobby-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px}
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:var(--surface);border-radius:12px;padding:24px;width:360px;max-width:92vw;max-height:90vh;overflow-y:auto}
+.modal h3{font-family:var(--font);font-size:17px;font-weight:normal;margin-bottom:16px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--sans);background:var(--bg);color:var(--text);outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--purple)}
+.modal-btns{display:flex;gap:8px;margin-top:16px}
+/* ── EMPTY ── */
+.empty{text-align:center;padding:48px 24px;color:var(--muted);font-size:13px}
+.empty-icon{font-size:36px;margin-bottom:12px}
+.empty-title{font-size:15px;color:var(--text);margin-bottom:6px}
+/* ── RESPONSIVE ── */
+@media(max-width:680px){
+  #sidebar{position:fixed;left:-220px;z-index:50;transition:left .2s}
+  #sidebar.open{left:0}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .two-col{grid-template-columns:1fr}
+}
+/* ── NOTICE BANNER ── */
+.api-notice{background:var(--amber-l);border:1px solid var(--amber);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--amber-d);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-logo">Series Planning Tracker</div>
+    <div class="setup-sub">Creative Arts Team</div>
+    <label class="setup-label">Anthropic API Key</label>
+    <input class="setup-input" type="password" id="api-key-input" placeholder="sk-ant-…" autocomplete="off">
+    <div class="setup-hint">
+      Your key is stored only in this browser and never sent anywhere except directly to Anthropic's API.
+      Get a free key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.
+    </div>
+    <label class="setup-label">Team PIN (optional — 4 digits)</label>
+    <input class="setup-input" type="password" id="pin-input" placeholder="Leave blank to skip" maxlength="4" pattern="[0-9]*">
+    <div class="setup-hint" style="margin-bottom:16px">Set a PIN so only your team can access this tracker.</div>
+    <button class="setup-btn" onclick="completeSetup()">Launch tracker</button>
+    <div class="setup-skip" onclick="completeSetup(true)">Skip API key — use without AI assistant</div>
+  </div>
+</div>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="pin-card">
+    <div class="pin-title">Creative Arts Tracker</div>
+    <div class="pin-sub">Enter your team PIN to continue</div>
+    <input class="pin-input" type="password" id="pin-entry" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter')checkPin()">
+    <div class="pin-error" id="pin-error"></div>
+    <button class="setup-btn" onclick="checkPin()">Unlock</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none;flex:1;overflow:hidden">
+  <div id="sidebar">
+    <div class="brand">
+      <h1>Series Planning</h1>
+      <p>Creative Arts System</p>
+    </div>
+    <div id="series-chip">No series selected</div>
+    <div class="nav-section">Planning</div>
+    <div class="nav-item active" onclick="setView('dashboard')"><span>◈</span> Dashboard</div>
+    <div class="nav-item" onclick="setView('tasks')"><span>☑</span> Tasks</div>
+    <div class="nav-item" onclick="setView('lobby')"><span>◉</span> Lobby &amp; Experience</div>
+    <div class="nav-section">People</div>
+    <div class="nav-item" onclick="setView('team')"><span>◎</span> Team</div>
+    <div class="nav-section">Intelligence</div>
+    <div class="nav-item" onclick="setView('ai')"><span>✦</span> AI Assistant</div>
+    <div class="nav-section">System</div>
+    <div class="nav-item" onclick="setView('settings')"><span>⚙</span> Settings</div>
+    <div class="sidebar-bottom" id="sb-stats"></div>
+  </div>
+  <div id="main">
+    <div id="topbar">
+      <h2 id="topbar-title">Dashboard</h2>
+      <div id="topbar-actions"></div>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+// ── DATA ───────────────────────────────────────────────────────────────────
+const PHASES=[
+  {id:1,name:"Vision & Concept",window:"Wk –12 to –10",color:"#7F77DD",lite:"#EEEDFE",dark:"#3C3489"},
+  {id:2,name:"Brand & Identity",window:"Wk –9 to –7",color:"#1D9E75",lite:"#E1F5EE",dark:"#085041"},
+  {id:3,name:"Content Production",window:"Wk –6 to –4",color:"#1D9E75",lite:"#E1F5EE",dark:"#085041"},
+  {id:4,name:"Launch & Promotion",window:"Wk –3 to –1",color:"#D85A30",lite:"#FAECE7",dark:"#712B13"},
+  {id:5,name:"Post-Series Wrap",window:"Week after",color:"#378ADD",lite:"#E6F1FB",dark:"#0C447C"},
+];
+const STATUSES=[
+  {id:"not-started",label:"Not started",color:"#888780",bg:"#F1EFE8"},
+  {id:"in-progress",label:"In progress",color:"#0C447C",bg:"#E6F1FB"},
+  {id:"at-risk",label:"At risk",color:"#712B13",bg:"#FAECE7"},
+  {id:"complete",label:"Complete",color:"#085041",bg:"#E1F5EE"},
+];
+const AC=["#7F77DD","#1D9E75","#D85A30","#BA7517","#378ADD","#D4537E","#639922","#534AB7","#0F6E56","#993C1D"];
+
+const DEFAULT_TASKS=[
+  {id:"p1-1",phase:1,role:"Pastor / Teaching team",due:"End of Week –12",task:"Series title, theme, and core scriptures confirmed in writing",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p1-2",phase:1,role:"Creative director",due:"End of Week –11",task:"Brainstorm session held — concept direction chosen",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p1-3",phase:1,role:"Creative director",due:"End of Week –10",task:"Series brief written, approved, and distributed to all team leads",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p1-4",phase:1,role:"All team leads",due:"End of Week –10",task:"Series dates locked — speaker and host schedule confirmed",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p1-g",phase:1,role:"",due:"",task:"Series brief signed off → Phase 2 begins",status:"not-started",assignedTo:"",notes:"",isGate:true},
+  {id:"p2-1",phase:2,role:"Graphic designer",due:"End of Week –9",task:"Mood board and color palette presented for approval",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p2-2",phase:2,role:"Graphic designer",due:"Friday of Week –8",task:"Series key art / logo finalized and approved",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p2-3",phase:2,role:"Graphic designer",due:"End of Week –7",task:"Full graphic template library delivered (social, slides, print)",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p2-4",phase:2,role:"Graphic designer",due:"End of Week –7",task:"One-page style guide published to shared team folder",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p2-5",phase:2,role:"Tech / production",due:"End of Week –7",task:"Stage and set design plan approved — items ordered or sourced",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p2-6",phase:2,role:"Video producer",due:"End of Week –7",task:"Bumper concept approved, shot list drafted",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p2-7",phase:2,role:"Web / comms",due:"End of Week –7",task:"Series page draft built (not live) — tap tag design mocked up",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p2-8",phase:2,role:"Guest experience",due:"End of Week –7",task:"Lobby concept and photo op plan approved — print items to printer",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p2-g",phase:2,role:"",due:"",task:"Key art approved + templates ready → Phase 3 begins",status:"not-started",assignedTo:"",notes:"",isGate:true},
+  {id:"p3-1",phase:3,role:"Video producer",due:"End of Week –6",task:"Interview subjects scheduled and filming dates confirmed",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p3-2",phase:3,role:"Video producer",due:"End of Week –5",task:"Series bumper filmed and in post-production",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p3-3",phase:3,role:"Video producer",due:"End of Week –4",task:"Bumper, promo video, and interview clips edited and approved",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p3-4",phase:3,role:"Social media lead",due:"End of Week –5",task:"Full series content calendar drafted — all weeks mapped",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p3-5",phase:3,role:"Social media lead",due:"End of Week –4",task:"First two weeks of posts written, designed, and pre-scheduled",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p3-6",phase:3,role:"Worship leader",due:"End of Week –5",task:"Set lists for all series weeks planned — volunteers scheduled",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p3-7",phase:3,role:"Graphic designer",due:"End of Week –4",task:"Sermon slide master and all weekly slide templates completed",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p3-8",phase:3,role:"Speakers / hosts",due:"End of Week –4",task:"All speakers confirmed — run-of-show shared with each communicator",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p3-g",phase:3,role:"",due:"",task:"All content built and approved → Phase 4 begins",status:"not-started",assignedTo:"",notes:"",isGate:true},
+  {id:"p4-1",phase:4,role:"Social media lead",due:"Tuesday of Week –3",task:"Teaser posts begin publishing — series announcement live",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p4-2",phase:4,role:"Web / comms",due:"Wednesday of Week –2",task:"Series page goes live on website",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p4-3",phase:4,role:"Web / comms",due:"Friday of Week –2",task:"Email announcement sent to full congregation",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p4-4",phase:4,role:"Web / comms",due:"End of Week –2",task:"Tap tag updated, tested, and confirmed live",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p4-5",phase:4,role:"Web / comms",due:"End of Week –2",task:"App content block updated with series art",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p4-6",phase:4,role:"Guest experience",due:"End of Week –2",task:"All lobby items confirmed — backdrop, tables, signage, prints",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p4-7",phase:4,role:"Tech / production",due:"Saturday of Week –1",task:"Full tech and production rehearsal completed",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p4-8",phase:4,role:"All teams",due:"Tuesday of Week –1",task:"Final Tuesday run-through — every team confirms ready",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p4-g",phase:4,role:"",due:"",task:"All systems go → Launch Sunday",status:"not-started",assignedTo:"",notes:"",isGate:true},
+  {id:"p5-1",phase:5,role:"Social media lead",due:"Monday after",task:"Final recap content posted — series playlist linked",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p5-2",phase:5,role:"Creative director",due:"Tuesday after",task:"Retrospective meeting held — wins and gaps documented",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p5-3",phase:5,role:"Video producer",due:"Wednesday after",task:"All sermon recordings uploaded and organized on YouTube",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p5-4",phase:5,role:"Web / comms",due:"Wednesday after",task:"Series archive page live — all sermons and notes linked",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p5-5",phase:5,role:"All team leads",due:"Friday after",task:"All assets archived — style guide saved for reference",status:"not-started",assignedTo:"",notes:"",isGate:false},
+  {id:"p5-6",phase:5,role:"Creative director",due:"Friday after",task:"Phase 1 kickoff date scheduled for next series",status:"not-started",assignedTo:"",notes:"",isGate:false},
+];
+const DEFAULT_LOBBY=[
+  {id:"l1",cat:"Photo op",item:"Series-themed backdrop designed and hung",status:"not-started",assignedTo:"",notes:""},
+  {id:"l2",cat:"Photo op",item:"Props sourced matching series color palette",status:"not-started",assignedTo:"",notes:""},
+  {id:"l3",cat:"Photo op",item:"Hashtag and series tag signage visible",status:"not-started",assignedTo:"",notes:""},
+  {id:"l4",cat:"Photo op",item:"Volunteer stationed at photo op",status:"not-started",assignedTo:"",notes:""},
+  {id:"l5",cat:"Ministry tables",item:"Table schedule confirmed — which ministries present",status:"not-started",assignedTo:"",notes:""},
+  {id:"l6",cat:"Ministry tables",item:"Table graphics and signage ready",status:"not-started",assignedTo:"",notes:""},
+  {id:"l7",cat:"Ministry tables",item:"Sign-up sheets or QR codes printed",status:"not-started",assignedTo:"",notes:""},
+  {id:"l8",cat:"Ministry tables",item:"Leader talking points prepared",status:"not-started",assignedTo:"",notes:""},
+  {id:"l9",cat:"Live elements",item:"Acoustic / pre-service worship set up",status:"not-started",assignedTo:"",notes:""},
+  {id:"l10",cat:"Live elements",item:"Welcome team briefed on series theme",status:"not-started",assignedTo:"",notes:""},
+  {id:"l11",cat:"Live elements",item:"Greeters positioned at all entry points",status:"not-started",assignedTo:"",notes:""},
+  {id:"l12",cat:"Live elements",item:"Ambient playlist or slide loop loaded",status:"not-started",assignedTo:"",notes:""},
+  {id:"l13",cat:"Signage",item:"Series banner or step-and-repeat in place",status:"not-started",assignedTo:"",notes:""},
+  {id:"l14",cat:"Signage",item:"Digital displays loaded with series art",status:"not-started",assignedTo:"",notes:""},
+  {id:"l15",cat:"Signage",item:"Bulletin or insert printed and available",status:"not-started",assignedTo:"",notes:""},
+  {id:"l16",cat:"Engagement",item:"Prayer wall or response cards available",status:"not-started",assignedTo:"",notes:""},
+  {id:"l17",cat:"Engagement",item:"Connection cards stocked at seating",status:"not-started",assignedTo:"",notes:""},
+  {id:"l18",cat:"Engagement",item:"Tap tag positioned and live",status:"not-started",assignedTo:"",notes:""},
+  {id:"l19",cat:"Engagement",item:"New guest kits stocked",status:"not-started",assignedTo:"",notes:""},
+  {id:"l20",cat:"Theme tie-in",item:"Color palette consistent across all lobby elements",status:"not-started",assignedTo:"",notes:""},
+  {id:"l21",cat:"Theme tie-in",item:"Scripture or key series phrase displayed",status:"not-started",assignedTo:"",notes:""},
+  {id:"l22",cat:"Theme tie-in",item:"Series bumper art visible on lobby screen",status:"not-started",assignedTo:"",notes:""},
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let S={
+  view:"dashboard",taskFilter:"all",statusFilter:"all",
+  seriesInfo:{name:"",launchDate:"",season:"",currentPhase:1},
+  tasks:JSON.parse(JSON.stringify(DEFAULT_TASKS)),
+  lobby:JSON.parse(JSON.stringify(DEFAULT_LOBBY)),
+  team:[],
+  aiMsgs:[{role:"ai",content:"Hi! I'm your series planning assistant. I have full context on your planning system — all 5 phases, every task, and your team.\n\nTry asking: **What's at risk?** or **Generate this Tuesday's agenda**."}],
+};
+
+function save(){
+  try{
+    const d={seriesInfo:S.seriesInfo,tasks:S.tasks,lobby:S.lobby,team:S.team,aiMsgs:S.aiMsgs.slice(-50)};
+    localStorage.setItem("spt-data",JSON.stringify(d));
+  }catch(e){}
+}
+function load(){
+  try{
+    const d=localStorage.getItem("spt-data");
+    if(d){const p=JSON.parse(d);Object.assign(S,p);}
+  }catch(e){}
+}
+
+// ── SETUP / AUTH ───────────────────────────────────────────────────────────
+function completeSetup(skipKey=false){
+  const key=document.getElementById("api-key-input").value.trim();
+  const pin=document.getElementById("pin-input").value.trim();
+  if(!skipKey&&key){
+    if(!key.startsWith("sk-ant-")){alert("That doesn't look like a valid Anthropic API key. It should start with sk-ant-");return;}
+    localStorage.setItem("spt-apikey",key);
+  }
+  if(pin&&/^\d{4}$/.test(pin)){
+    localStorage.setItem("spt-pin",btoa(pin));
+  }
+  localStorage.setItem("spt-setup","1");
+  boot();
+}
+function checkPin(){
+  const entered=document.getElementById("pin-entry").value;
+  const stored=localStorage.getItem("spt-pin");
+  if(stored&&btoa(entered)===stored){
+    document.getElementById("pin-screen").style.display="none";
+    document.getElementById("app").style.display="flex";
+    render();
+  } else {
+    document.getElementById("pin-error").textContent="Incorrect PIN. Try again.";
+    document.getElementById("pin-entry").value="";
+  }
+}
+function boot(){
+  document.getElementById("setup-screen").style.display="none";
+  const pin=localStorage.getItem("spt-pin");
+  if(pin){
+    document.getElementById("pin-screen").style.display="flex";
+    setTimeout(()=>document.getElementById("pin-entry").focus(),100);
+  } else {
+    document.getElementById("app").style.display="flex";
+    load();
+    render();
+  }
+}
+window.addEventListener("DOMContentLoaded",()=>{
+  if(localStorage.getItem("spt-setup")){
+    const pin=localStorage.getItem("spt-pin");
+    if(pin){
+      document.getElementById("setup-screen").style.display="none";
+      document.getElementById("pin-screen").style.display="flex";
+      setTimeout(()=>document.getElementById("pin-entry").focus(),100);
+      load();
+    } else {
+      document.getElementById("setup-screen").style.display="none";
+      document.getElementById("app").style.display="flex";
+      load();
+      render();
+    }
+  }
+  document.getElementById("api-key-input").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("pin-input").focus()});
+  document.getElementById("pin-input").addEventListener("keydown",e=>{if(e.key==="Enter")completeSetup()});
+});
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function ini(n){return n.split(" ").map(w=>w[0]||"").join("").slice(0,2).toUpperCase()}
+function mc(n){let h=0;for(let c of n)h=(h*31+c.charCodeAt(0))&0xFFFF;return AC[h%AC.length]}
+function gs(id){return STATUSES.find(s=>s.id===id)||STATUSES[0]}
+function cs(cur){const i=STATUSES.findIndex(s=>s.id===cur);return STATUSES[(i+1)%STATUSES.length].id}
+function pp(pid){const t=S.tasks.filter(t=>t.phase===pid&&!t.isGate);return t.length?Math.round(t.filter(t=>t.status==="complete").length/t.length*100):0}
+function stats(){const t=S.tasks.filter(t=>!t.isGate);return{total:t.length,done:t.filter(t=>t.status==="complete").length,risk:t.filter(t=>t.status==="at-risk").length,prog:t.filter(t=>t.status==="in-progress").length,ns:t.filter(t=>t.status==="not-started").length}}
+function apiKey(){return localStorage.getItem("spt-apikey")||""}
+function setView(v){S.view=v;S.taskFilter="all";S.statusFilter="all";render()}
+
+// ── AI ─────────────────────────────────────────────────────────────────────
+function aiCtx(){
+  const st=stats();
+  const atRisk=S.tasks.filter(t=>t.status==="at-risk"&&!t.isGate).map(t=>`• [P${t.phase}] ${t.task} (Assigned: ${t.assignedTo||"unassigned"})`).join("\n");
+  const unassigned=S.tasks.filter(t=>!t.assignedTo&&!t.isGate&&t.status!=="complete").length;
+  return `You are the AI planning assistant for ${S.seriesInfo.name||"this church"}'s Creative Arts Team.
+
+SERIES: "${S.seriesInfo.name||"Not set"}" | Launch: ${S.seriesInfo.launchDate||"TBD"} | Season: ${S.seriesInfo.season||"TBD"} | Phase: ${S.seriesInfo.currentPhase}
+TASKS: ${st.total} total | ${st.done} complete | ${st.prog} in-progress | ${st.risk} at-risk | ${unassigned} unassigned
+PHASE PROGRESS: ${PHASES.map(p=>`P${p.id}: ${pp(p.id)}%`).join(" | ")}
+TEAM: ${S.team.map(m=>`${m.name} (${m.role})`).join(", ")||"No team added yet"}
+AT-RISK TASKS:\n${atRisk||"None"}
+LOBBY: ${S.lobby.filter(i=>i.status==="complete").length}/${S.lobby.length} items complete
+
+PLANNING SYSTEM:
+Phase 1 (Wk–12 to–10): Vision & Concept — gate: series brief signed off
+Phase 2 (Wk–9 to–7): Brand & Identity — gate: key art approved + templates ready
+Phase 3 (Wk–6 to–4): Content Production — gate: all content built and approved
+Phase 4 (Wk–3 to–1): Launch & Promotion — gate: tech rehearsed, site live, lobby confirmed
+Phase 5 (Week after): Post-Series Wrap — retro within 7 days
+Tuesday meeting (60 min): wins(5) → series check(10) → Sunday debrief(10) → lobby(10) → events/next series(10) → social/digital(10) → assignments+prayer(5)
+
+Be concise, specific, and actionable. Use **bold** for emphasis. Reference actual task names and team members.`;
+}
+
+async function sendAI(msg){
+  S.aiMsgs.push({role:"user",content:msg});
+  S.aiMsgs.push({role:"ai",content:"__typing__"});
+  renderAI();
+  scrollChat();
+  const key=apiKey();
+  if(!key){
+    S.aiMsgs[S.aiMsgs.length-1]={role:"ai",content:"No API key set. Go to **Settings** to add your Anthropic API key and unlock the AI assistant."};
+    renderAI();scrollChat();return;
+  }
+  const msgs=S.aiMsgs.filter(m=>m.content!=="__typing__").map(m=>({role:m.role==="ai"?"assistant":"user",content:m.content}));
+  msgs.pop();
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-allow-browser":"true"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:aiCtx(),messages:msgs})
+    });
+    const d=await r.json();
+    if(d.error){S.aiMsgs[S.aiMsgs.length-1]={role:"ai",content:`API error: ${d.error.message}`};}
+    else{S.aiMsgs[S.aiMsgs.length-1]={role:"ai",content:d.content?.find(b=>b.type==="text")?.text||"No response."};}
+  }catch(e){
+    S.aiMsgs[S.aiMsgs.length-1]={role:"ai",content:"Network error. Check your connection and API key."};
+  }
+  save();renderAI();scrollChat();
+}
+function scrollChat(){setTimeout(()=>{const el=document.getElementById("chat-msgs");if(el)el.scrollTop=el.scrollHeight},60)}
+function fmtAI(t){return esc(t).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\*(.*?)\*/g,"<em>$1</em>").replace(/\n/g,"<br>")}
+
+// ── RENDER SIDEBAR ─────────────────────────────────────────────────────────
+function renderSidebar(){
+  document.getElementById("series-chip").textContent=S.seriesInfo.name||"No series selected";
+  document.querySelectorAll(".nav-item").forEach(el=>{
+    const oc=el.getAttribute("onclick")||"";
+    const views=["dashboard","tasks","lobby","team","ai","settings"];
+    const match=views.find(v=>oc.includes(`'${v}'`));
+    el.classList.toggle("active",match===S.view);
+  });
+  const st=stats();
+  document.getElementById("sb-stats").innerHTML=`
+    <div class="s-stat"><span>Complete</span><span>${st.done}/${st.total}</span></div>
+    <div class="s-stat"><span>At risk</span><span style="color:#D85A30">${st.risk}</span></div>
+    <div class="s-stat"><span>Team</span><span>${S.team.length}</span></div>
+  `;
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const st=stats();
+  const pct=st.total?Math.round(st.done/st.total*100):0;
+  const risk=S.tasks.filter(t=>t.status==="at-risk"&&!t.isGate).slice(0,4);
+  document.getElementById("topbar-title").textContent="Dashboard";
+  document.getElementById("topbar-actions").innerHTML=`<button class="btn btn-primary" onclick="showSeriesModal()">Edit series info</button>`;
+  document.getElementById("content").style.padding="24px";
+  document.getElementById("content").innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="num">${pct}%</div><div class="lbl">Overall complete</div></div>
+      <div class="stat-card"><div class="num">${st.done}</div><div class="lbl">Tasks done</div></div>
+      <div class="stat-card"><div class="num" style="color:#D85A30">${st.risk}</div><div class="lbl">At risk</div></div>
+      <div class="stat-card"><div class="num">${S.team.length}</div><div class="lbl">Team members</div></div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div style="font-size:13px;font-weight:500;margin-bottom:14px">Phase progress</div>
+        ${PHASES.map(p=>{const pc=pp(p.id);return`<div class="phase-bar-wrap"><div class="phase-bar-label"><span class="phase-bar-name" style="color:${p.dark}">Phase ${p.id} — ${p.name}</span><span class="phase-bar-pct">${pc}%</span></div><div class="phase-bar"><div class="phase-bar-fill" style="width:${pc}%;background:${p.color}"></div></div></div>`}).join("")}
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:500;margin-bottom:12px">${risk.length?`⚠ At-risk tasks (${risk.length})`:"All clear — no at-risk tasks"}</div>
+        ${risk.map(t=>{const ph=PHASES.find(p=>p.id===t.phase);return`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="font-size:10px;background:${ph.lite};color:${ph.dark};padding:2px 6px;border-radius:4px;margin-right:6px">P${t.phase}</span>${esc(t.task.slice(0,55))}${t.task.length>55?"…":""}<br><span style="color:var(--muted);font-size:11px">${esc(t.assignedTo)||"Unassigned"} · ${esc(t.due)}</span></div>`}).join("")}
+        ${risk.length?`<button class="btn" style="margin-top:10px;width:100%;font-size:11px" onclick="S.view='tasks';S.statusFilter='at-risk';render()">View all at-risk →</button>`:""}
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:12px">Current series</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:12px">
+        <div><div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Series name</div><div style="font-weight:500">${esc(S.seriesInfo.name)||"—"}</div></div>
+        <div><div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Launch Sunday</div><div style="font-weight:500">${esc(S.seriesInfo.launchDate)||"—"}</div></div>
+        <div><div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Season</div><div style="font-weight:500">${esc(S.seriesInfo.season)||"—"}</div></div>
+        <div><div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Current phase</div><div style="font-weight:500;color:${PHASES[S.seriesInfo.currentPhase-1]?.color}">${PHASES[S.seriesInfo.currentPhase-1]?.name||"—"}</div></div>
+      </div>
+    </div>
+  `;
+}
+
+// ── TASKS ──────────────────────────────────────────────────────────────────
+function renderTasks(){
+  document.getElementById("topbar-title").textContent="Tasks";
+  document.getElementById("topbar-actions").innerHTML=`<button class="btn" onclick="if(confirm('Reset all tasks to Not Started?')){S.tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));save();renderView()}">Reset</button>`;
+  document.getElementById("content").style.padding="24px";
+  let filtered=S.tasks;
+  if(S.taskFilter!=="all")filtered=filtered.filter(t=>t.phase===parseInt(S.taskFilter));
+  if(S.statusFilter!=="all")filtered=filtered.filter(t=>t.status===S.statusFilter);
+  const phases=S.taskFilter==="all"?PHASES:PHASES.filter(p=>p.id===parseInt(S.taskFilter));
+  let html=`
+    <div class="filter-row">
+      <button class="filter-btn ${S.taskFilter==="all"?"active":""}" onclick="S.taskFilter='all';renderView()">All phases</button>
+      ${PHASES.map(p=>`<button class="filter-btn ${S.taskFilter==p.id?"active":""}" style="${S.taskFilter==p.id?`background:${p.color};color:#fff;border-color:${p.color}`:`color:${p.dark};border-color:${p.color};background:${p.lite}`}" onclick="S.taskFilter=${p.id};renderView()">Phase ${p.id}</button>`).join("")}
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn ${S.statusFilter==="all"?"active":""}" onclick="S.statusFilter='all';renderView()">All statuses</button>
+      ${STATUSES.map(s=>`<button class="filter-btn ${S.statusFilter===s.id?"active":""}" onclick="S.statusFilter='${s.id}';renderView()">${s.label}</button>`).join("")}
+    </div>
+  `;
+  for(const ph of phases){
+    const pt=filtered.filter(t=>t.phase===ph.id);
+    if(!pt.length)continue;
+    const done=S.tasks.filter(t=>t.phase===ph.id&&!t.isGate&&t.status==="complete").length;
+    const tot=S.tasks.filter(t=>t.phase===ph.id&&!t.isGate).length;
+    html+=`<div class="phase-section"><div class="phase-header"><span class="phase-badge" style="background:${ph.lite};color:${ph.dark}">Phase ${ph.id}</span><span class="phase-title">${ph.name}</span><span style="font-size:11px;background:${ph.lite};color:${ph.dark};padding:2px 8px;border-radius:20px">${done}/${tot} done</span><span class="phase-window">${ph.window}</span></div>${pt.map(t=>taskCard(t,ph)).join("")}</div>`;
+  }
+  document.getElementById("content").innerHTML=html;
+}
+function taskCard(t,ph){
+  if(t.isGate)return`<div class="task-card gate"><span class="gate-lbl">Gate</span><span style="flex:1;font-size:13px;font-weight:500;color:${ph.dark}">${esc(t.task)}</span>${statusBtn(t)}</div>`;
+  const mem=S.team.find(m=>m.name===t.assignedTo);
+  const s=gs(t.status);
+  return`<div class="task-card"><div class="task-main"><div class="task-text">${esc(t.task)}</div><div class="task-meta"><span class="role-tag">${esc(t.role)}</span>${t.due?`<span class="due-tag">${esc(t.due)}</span>`:""}<button class="status-btn" style="background:${s.bg};color:${s.color}" onclick="cTS('${esc(t.id)}')">${s.label}</button>${mem?`<button class="assignee-pill" style="background:${mc(mem.name)}22;color:${mc(mem.name)}" onclick="showAssign('${esc(t.id)}')" title="Reassign"><span class="avatar" style="background:${mc(mem.name)};width:14px;height:14px;font-size:7px">${ini(mem.name)}</span>${esc(mem.name)}</button>`:`<button class="assign-btn" onclick="showAssign('${esc(t.id)}')">+ Assign</button>`}<input class="notes-in" placeholder="Add note…" value="${esc(t.notes)}" onchange="S.tasks.find(x=>x.id==='${esc(t.id)}').notes=this.value;save()"></div></div></div>`;
+}
+function statusBtn(t){const s=gs(t.status);return`<button class="status-btn" style="background:${s.bg};color:${s.color}" onclick="cTS('${esc(t.id)}')">${s.label}</button>`}
+function cTS(id){const t=S.tasks.find(t=>t.id===id);if(t){t.status=cs(t.status);save();renderView()}}
+
+// ── LOBBY ──────────────────────────────────────────────────────────────────
+const LOBBY_CATS={
+  "Photo op":{color:"#7F77DD",lite:"#EEEDFE",dark:"#3C3489"},
+  "Ministry tables":{color:"#D85A30",lite:"#FAECE7",dark:"#712B13"},
+  "Live elements":{color:"#1D9E75",lite:"#E1F5EE",dark:"#085041"},
+  "Signage":{color:"#BA7517",lite:"#FAEEDA",dark:"#633806"},
+  "Engagement":{color:"#378ADD",lite:"#E6F1FB",dark:"#0C447C"},
+  "Theme tie-in":{color:"#888780",lite:"#F1EFE8",dark:"#444441"},
+};
+function renderLobby(){
+  document.getElementById("topbar-title").textContent="Lobby & Experience";
+  document.getElementById("topbar-actions").innerHTML=`<button class="btn" onclick="if(confirm('Reset lobby checklist?')){S.lobby=JSON.parse(JSON.stringify(DEFAULT_LOBBY));save();renderView()}">Reset</button>`;
+  document.getElementById("content").style.padding="24px";
+  const done=S.lobby.filter(i=>i.status==="complete").length;
+  const tot=S.lobby.length;
+  const pct=tot?Math.round(done/tot*100):0;
+  let html=`<div class="card" style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:13px;font-weight:500">Weekly lobby readiness</span><span style="color:var(--teal-d);font-weight:500;font-size:13px">${done}/${tot} confirmed</span></div><div class="phase-bar"><div class="phase-bar-fill" style="width:${pct}%;background:#1D9E75"></div></div></div>`;
+  const cats=[...new Set(DEFAULT_LOBBY.map(i=>i.cat))];
+  for(const cat of cats){
+    const cfg=LOBBY_CATS[cat]||{color:"#888",lite:"#F5F5F3",dark:"#444"};
+    const items=S.lobby.filter(i=>i.cat===cat);
+    const cdone=items.filter(i=>i.status==="complete").length;
+    html+=`<div class="phase-section"><div class="lobby-header"><span class="lobby-badge" style="background:${cfg.lite};color:${cfg.dark}">${cat}</span><span style="font-size:11px;background:${cfg.lite};color:${cfg.dark};padding:2px 8px;border-radius:20px">${cdone}/${items.length}</span></div>${items.map(item=>{const mem=S.team.find(m=>m.name===item.assignedTo);const s=gs(item.status);return`<div class="task-card"><div class="task-main"><div class="task-text">${esc(item.item)}</div><div class="task-meta"><button class="status-btn" style="background:${s.bg};color:${s.color}" onclick="cLS('${esc(item.id)}')">${s.label}</button>${mem?`<button class="assignee-pill" style="background:${mc(mem.name)}22;color:${mc(mem.name)}" onclick="showLobbyAssign('${esc(item.id)}')" title="Reassign"><span class="avatar" style="background:${mc(mem.name)};width:14px;height:14px;font-size:7px">${ini(mem.name)}</span>${esc(mem.name)}</button>`:`<button class="assign-btn" onclick="showLobbyAssign('${esc(item.id)}')">+ Assign</button>`}<input class="notes-in" placeholder="Add note…" value="${esc(item.notes)}" onchange="S.lobby.find(x=>x.id==='${esc(item.id)}').notes=this.value;save()"></div></div></div>`}).join("")}</div>`;
+  }
+  document.getElementById("content").innerHTML=html;
+}
+function cLS(id){const item=S.lobby.find(i=>i.id===id);if(item){item.status=cs(item.status);save();renderView()}}
+
+// ── TEAM ───────────────────────────────────────────────────────────────────
+function renderTeam(){
+  document.getElementById("topbar-title").textContent="Team";
+  document.getElementById("topbar-actions").innerHTML=`<button class="btn btn-primary" onclick="showAddMember()">+ Add member</button>`;
+  document.getElementById("content").style.padding="24px";
+  if(!S.team.length){
+    document.getElementById("content").innerHTML=`<div class="empty"><div class="empty-icon">◎</div><div class="empty-title">No team members yet</div><div>Add your creative arts team to assign tasks to specific people.</div><br><button class="btn btn-primary" onclick="showAddMember()">+ Add first member</button></div>`;
+    return;
+  }
+  let html=`<div class="team-grid">`;
+  for(const m of S.team){
+    const mt=S.tasks.filter(t=>t.assignedTo===m.name&&!t.isGate);
+    const col=mc(m.name);
+    html+=`<div class="team-card"><div style="display:flex;align-items:center;gap:10px"><div class="avatar avatar-lg" style="background:${col}">${ini(m.name)}</div><div><div class="team-name">${esc(m.name)}</div><div class="team-role">${esc(m.role)}</div></div></div><div>${STATUSES.map(s=>{const c=mt.filter(t=>t.status===s.id).length;return c?`<span style="font-size:10px;background:${s.bg};color:${s.color};padding:2px 7px;border-radius:20px;margin-right:4px;display:inline-block;margin-bottom:3px">${c} ${s.label}</span>`:""}).join("")||`<span style="font-size:11px;color:var(--muted)">No tasks assigned</span>`}</div><div class="team-tasks-count">${mt.length} task${mt.length!==1?"s":""} assigned</div><button class="btn btn-danger" style="font-size:11px" onclick="removeMember('${esc(m.name)}')">Remove</button></div>`;
+  }
+  html+=`<div class="add-card" onclick="showAddMember()"><div style="font-size:28px">+</div><div>Add member</div></div></div>`;
+  document.getElementById("content").innerHTML=html;
+}
+function removeMember(name){if(!confirm(`Remove ${name}? Their task assignments will be cleared.`))return;S.team=S.team.filter(m=>m.name!==name);S.tasks.forEach(t=>{if(t.assignedTo===name)t.assignedTo=""});S.lobby.forEach(i=>{if(i.assignedTo===name)i.assignedTo=""});save();render()}
+
+// ── AI ─────────────────────────────────────────────────────────────────────
+function renderAI(){
+  document.getElementById("topbar-title").textContent="AI Assistant";
+  document.getElementById("topbar-actions").innerHTML=`<button class="btn" onclick="S.aiMsgs=[{role:'ai',content:'Chat cleared.'}];save();renderAI()">Clear chat</button>`;
+  document.getElementById("content").style.padding="0";
+  const hasKey=!!apiKey();
+  document.getElementById("content").innerHTML=`<div id="ai-wrap">
+    ${!hasKey?`<div style="padding:12px 24px;background:var(--amber-l);border-bottom:1px solid var(--amber);font-size:12px;color:var(--amber-d)">No API key set — <a href="#" onclick="setView('settings');return false" style="color:var(--amber-d);font-weight:500">add it in Settings</a> to enable the AI assistant.</div>`:""}
+    <div class="quick-row">
+      <button class="qp" onclick="sendAI('What tasks are currently at risk?')">What's at risk?</button>
+      <button class="qp" onclick="sendAI('Generate this Tuesday meeting agenda based on current task status.')">Tuesday agenda</button>
+      <button class="qp" onclick="sendAI('Which tasks are unassigned right now?')">Unassigned tasks</button>
+      <button class="qp" onclick="sendAI('What are this week priorities to stay on track?')">This week's priorities</button>
+      <button class="qp" onclick="sendAI('What phase gate should we be working toward?')">Next phase gate</button>
+      <button class="qp" onclick="sendAI('Give me a leadership summary of overall series progress.')">Progress summary</button>
+    </div>
+    <div id="chat-msgs">
+      ${S.aiMsgs.map(m=>{
+        if(m.content==="__typing__")return`<div class="msg msg-ai"><div class="typing"><span></span><span></span><span></span></div></div>`;
+        return`<div class="msg ${m.role==="user"?"msg-user":"msg-ai"}">${fmtAI(m.content)}</div>`;
+      }).join("")}
+    </div>
+    <div id="chat-in-row">
+      <input id="chat-in" placeholder="Ask anything about your series planning…" onkeydown="if(event.key==='Enter'&&this.value.trim()){const v=this.value.trim();this.value='';sendAI(v)}">
+      <button class="btn btn-primary" onclick="const i=document.getElementById('chat-in');if(i.value.trim()){const v=i.value.trim();i.value='';sendAI(v)}">Send</button>
+    </div>
+  </div>`;
+  scrollChat();
+}
+
+// ── SETTINGS ───────────────────────────────────────────────────────────────
+function renderSettings(){
+  document.getElementById("topbar-title").textContent="Settings";
+  document.getElementById("topbar-actions").innerHTML="";
+  document.getElementById("content").style.padding="24px";
+  const key=apiKey();
+  const masked=key?key.slice(0,10)+"•••••••••••••••••••••••":"Not set";
+  document.getElementById("content").innerHTML=`
+    <div class="card" style="max-width:560px">
+      <div class="settings-section">
+        <div class="settings-title">API key</div>
+        <div class="key-display">${esc(masked)}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="showApiKeyModal()">Update API key</button>
+          ${key?`<button class="btn btn-danger" onclick="if(confirm('Remove API key?')){localStorage.removeItem('spt-apikey');renderSettings()}">Remove key</button>`:""}
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">Your API key is stored in this browser only and sent exclusively to Anthropic's API. Get a key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--purple)">console.anthropic.com</a>.</div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Team PIN</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">${localStorage.getItem("spt-pin")?"A PIN is currently set.":"No PIN set — anyone with the link can access this tracker."}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" onclick="showPinModal()">Change PIN</button>
+          ${localStorage.getItem("spt-pin")?`<button class="btn btn-danger" onclick="if(confirm('Remove PIN?')){localStorage.removeItem('spt-pin');renderSettings()}">Remove PIN</button>`:""}
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Data</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="exportData()">Export data (JSON)</button>
+          <button class="btn btn-danger" onclick="if(confirm('Reset ALL data including tasks, team, and series info?')){localStorage.removeItem('spt-data');S.tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));S.lobby=JSON.parse(JSON.stringify(DEFAULT_LOBBY));S.team=[];S.seriesInfo={name:'',launchDate:'',season:'',currentPhase:1};S.aiMsgs=[];save();render()}">Reset all data</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Hosting this tracker</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7">
+          This is a single HTML file. To share with your team:<br><br>
+          <strong style="color:var(--text)">Netlify (free):</strong> Go to <a href="https://netlify.com" target="_blank" style="color:var(--purple)">netlify.com</a> → drag this file into the deploy box → get a live URL.<br><br>
+          <strong style="color:var(--text)">Vercel (free):</strong> Go to <a href="https://vercel.com" target="_blank" style="color:var(--purple)">vercel.com</a> → upload the file → deploy.<br><br>
+          <strong style="color:var(--text)">Your church server:</strong> Upload the file to any web hosting via FTP/cPanel.<br><br>
+          Each team member who opens the URL will need their own API key set in their browser. Task data is currently per-browser — for a shared database, contact your web team to connect a backend.
+        </div>
+      </div>
+    </div>
+  `;
+}
+function exportData(){const d=localStorage.getItem("spt-data")||"{}";const a=document.createElement("a");a.href="data:application/json,"+encodeURIComponent(d);a.download="series-planning-data.json";a.click()}
+
+// ── MODALS ─────────────────────────────────────────────────────────────────
+function cm(){document.getElementById("modal-root").innerHTML=""}
+function modal(html){document.getElementById("modal-root").innerHTML=`<div class="overlay" onclick="if(event.target===this)cm()">${html}</div>`}
+
+function showSeriesModal(){
+  modal(`<div class="modal"><h3>Series information</h3>
+    <div class="field"><label>Series name</label><input id="m-n" value="${esc(S.seriesInfo.name)}" placeholder="e.g. Known"></div>
+    <div class="field"><label>Launch Sunday</label><input id="m-d" value="${esc(S.seriesInfo.launchDate)}" placeholder="e.g. September 7, 2025"></div>
+    <div class="field"><label>Season / year</label><input id="m-s" value="${esc(S.seriesInfo.season)}" placeholder="e.g. Fall 2025"></div>
+    <div class="field"><label>Current phase</label><select id="m-p">${PHASES.map(p=>`<option value="${p.id}" ${S.seriesInfo.currentPhase===p.id?"selected":""}>Phase ${p.id} — ${p.name}</option>`).join("")}</select></div>
+    <div class="modal-btns"><button class="btn btn-primary" onclick="S.seriesInfo={name:document.getElementById('m-n').value,launchDate:document.getElementById('m-d').value,season:document.getElementById('m-s').value,currentPhase:parseInt(document.getElementById('m-p').value)};save();cm();render()">Save</button><button class="btn" onclick="cm()">Cancel</button></div>
+  </div>`);
+}
+function showAddMember(){
+  modal(`<div class="modal"><h3>Add team member</h3>
+    <div class="field"><label>Full name</label><input id="m-mn" placeholder="e.g. Sarah Johnson"></div>
+    <div class="field"><label>Role</label><input id="m-mr" placeholder="e.g. Graphic designer"></div>
+    <div class="modal-btns"><button class="btn btn-primary" onclick="const n=document.getElementById('m-mn').value.trim(),r=document.getElementById('m-mr').value.trim();if(!n)return;if(!S.team.find(m=>m.name===n))S.team.push({name:n,role:r});save();cm();render()">Add</button><button class="btn" onclick="cm()">Cancel</button></div>
+  </div>`);
+  setTimeout(()=>document.getElementById("m-mn").focus(),50);
+}
+function showAssign(tid){
+  const t=S.tasks.find(t=>t.id===tid);if(!t)return;
+  if(!S.team.length){modal(`<div class="modal"><h3>Assign task</h3><p style="color:var(--muted);font-size:13px">No team members yet. <a href="#" onclick="cm();showAddMember();return false" style="color:var(--purple)">Add a member first.</a></p><div class="modal-btns"><button class="btn" onclick="cm()">Close</button></div></div>`);return;}
+  modal(`<div class="modal"><h3>Assign task</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">${esc(t.task.slice(0,80))}${t.task.length>80?"…":""}</p>
+    <div class="field"><label>Assign to</label><select id="m-as"><option value="">Unassigned</option>${S.team.map(m=>`<option value="${esc(m.name)}" ${t.assignedTo===m.name?"selected":""}>${esc(m.name)} — ${esc(m.role)}</option>`).join("")}</select></div>
+    <div class="modal-btns"><button class="btn btn-primary" onclick="S.tasks.find(t=>t.id==='${esc(tid)}').assignedTo=document.getElementById('m-as').value;save();cm();renderView()">Save</button><button class="btn" onclick="cm()">Cancel</button></div>
+  </div>`);
+}
+function showLobbyAssign(iid){
+  const item=S.lobby.find(i=>i.id===iid);if(!item)return;
+  if(!S.team.length){modal(`<div class="modal"><h3>Assign item</h3><p style="color:var(--muted);font-size:13px">No team members yet. <a href="#" onclick="cm();showAddMember();return false" style="color:var(--purple)">Add a member first.</a></p><div class="modal-btns"><button class="btn" onclick="cm()">Close</button></div></div>`);return;}
+  modal(`<div class="modal"><h3>Assign lobby item</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">${esc(item.item)}</p>
+    <div class="field"><label>Assign to</label><select id="m-la"><option value="">Unassigned</option>${S.team.map(m=>`<option value="${esc(m.name)}" ${item.assignedTo===m.name?"selected":""}>${esc(m.name)}</option>`).join("")}</select></div>
+    <div class="modal-btns"><button class="btn btn-primary" onclick="S.lobby.find(i=>i.id==='${esc(iid)}').assignedTo=document.getElementById('m-la').value;save();cm();renderView()">Save</button><button class="btn" onclick="cm()">Cancel</button></div>
+  </div>`);
+}
+function showApiKeyModal(){
+  modal(`<div class="modal"><h3>Update API key</h3>
+    <div class="field"><label>Anthropic API key</label><input type="password" id="m-ak" placeholder="sk-ant-…"></div>
+    <div class="modal-btns"><button class="btn btn-primary" onclick="const k=document.getElementById('m-ak').value.trim();if(k){localStorage.setItem('spt-apikey',k);cm();renderSettings()}else alert('Enter a valid key')">Save</button><button class="btn" onclick="cm()">Cancel</button></div>
+  </div>`);
+}
+function showPinModal(){
+  modal(`<div class="modal"><h3>Set team PIN</h3>
+    <div class="field"><label>New PIN (4 digits)</label><input type="password" id="m-np" maxlength="4" placeholder="e.g. 1234"></div>
+    <div class="modal-btns"><button class="btn btn-primary" onclick="const p=document.getElementById('m-np').value;if(/^\d{4}$/.test(p)){localStorage.setItem('spt-pin',btoa(p));cm();renderSettings()}else alert('PIN must be exactly 4 digits')">Set PIN</button><button class="btn" onclick="cm()">Cancel</button></div>
+  </div>`);
+}
+
+// ── MAIN RENDER ────────────────────────────────────────────────────────────
+function renderView(){
+  if(S.view==="dashboard")renderDashboard();
+  else if(S.view==="tasks")renderTasks();
+  else if(S.view==="lobby")renderLobby();
+  else if(S.view==="team")renderTeam();
+  else if(S.view==="ai")renderAI();
+  else if(S.view==="settings")renderSettings();
+}
+function render(){renderSidebar();renderView()}
+</script>
+</body>
+</html>
